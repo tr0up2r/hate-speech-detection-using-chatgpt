@@ -2,12 +2,18 @@ import pandas as pd
 import openai
 from tqdm import tqdm
 import time
+import backoff  # for exponential backoff
 
 openai.api_key = "MY_API_KEY"
 
 
+@backoff.on_exception(backoff.expo, openai.error.RateLimitError)
+def completions_with_backoff(**kwargs):
+    return openai.ChatCompletion.create(**kwargs)
+
+
 def analyze_tweet(text):
-    retries = 3
+    retries = 1
     sentiment = None
 
     while retries > 0:
@@ -16,7 +22,7 @@ def analyze_tweet(text):
             {"role": "user", "content": f"Analyze the following text and determine if the text is: hate speech, offensive language or none of both. Return only a single word, either HATE, OFFENSIVE or NEUTRAL respectively:\n{text}"}
         ]
 
-        completion = openai.ChatCompletion.create(
+        completion = completions_with_backoff(
             model="gpt-3.5-turbo",
             messages=messages,
             max_tokens=3,
@@ -35,7 +41,7 @@ def analyze_tweet(text):
     else:
         result = "neutral"
 
-    retries = 3
+    retries = 1
     time.sleep(0.5)
 
     return result
@@ -52,20 +58,16 @@ if __name__ == '__main__':
 
     with tqdm(total = len(df)) as pbar:
         while i < len(df):
-            try:
-                result = analyze_tweet(df.tweet.iloc[i])
-                if result == 'HATE':
-                    result = 0
-                elif result == 'OFFENSIVE':
-                    result = 1
-                else:
-                    result = 2
-                results.append(result)
-                i += 1
-                pbar.update(1)
-            except Exception as e:
-                print('API Rate Limit Error, try again')
-                pass
+            result = analyze_tweet(df.tweet.iloc[i])
+            if result == 'HATE':
+                result = 0
+            elif result == 'OFFENSIVE':
+                result = 1
+            else:
+                result = 2
+            results.append(result)
+            i += 1
+            pbar.update(1)
 
     column = 'prediction'
     df.insert(1, column, results)
