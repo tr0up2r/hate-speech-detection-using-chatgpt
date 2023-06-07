@@ -19,7 +19,7 @@ def analyze_tweet(text):
     while retries > 0:
         messages = [
             {"role": "system", "content": "You are an AI language model trained to analyze and detect hate speech."},
-            {"role": "user", "content": f"Analyze the following text and determine if the text is: hate speech, offensive language or none of both. Return only a single word, either HATE, OFFENSIVE or NEUTRAL respectively:\n{text}"}
+            {"role": "user", "content": f"Analyze the following text from twitter and determine if the text is: hate speech, offensive language or none of both. Consdering the context of the ENTIRE text, return only a single word, either HATE, OFFENSIVE or NEUTRAL respectively:\n{text}"}
         ]
 
         completion = completions_with_backoff(
@@ -48,26 +48,28 @@ def analyze_tweet(text):
 
 
 if __name__ == '__main__':
-    input_file = "../hate-speech-detection-using-chatgpt/csv/labeled_data.csv"
+    input_file = "../hate-speech-detection-using-chatgpt/csv/labeled_data_preprocessed.csv"
     df = pd.read_csv(input_file)
     df = df.sample(frac=1)
-    df = df.iloc[:100]
 
     results = []
     i = 0
 
     with tqdm(total = len(df)) as pbar:
         while i < len(df):
-            result = analyze_tweet(df.tweet.iloc[i])
-            if result == 'HATE':
-                result = 0
-            elif result == 'OFFENSIVE':
-                result = 1
-            else:
-                result = 2
-            results.append(result)
-            i += 1
-            pbar.update(1)
+            try:
+                result = analyze_tweet(df.tweet.iloc[i])
+                if result == 'HATE':
+                    result = 0
+                elif result == 'OFFENSIVE':
+                    result = 1
+                else:
+                    result = 2
+                results.append(result)
+                i += 1
+                pbar.update(1)
+            except:
+                pass
 
     column = 'prediction'
     df.insert(1, column, results)
