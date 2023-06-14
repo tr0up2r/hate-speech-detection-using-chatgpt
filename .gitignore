@@ -1,4 +1,5 @@
 *.csv
+*.jsonl
 
 # exclude plots.
 *.png
