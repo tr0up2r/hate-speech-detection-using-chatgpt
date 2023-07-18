@@ -12,7 +12,7 @@ def completions_with_backoff(**kwargs):
     return openai.ChatCompletion.create(**kwargs)
 
 
-def analyze_tweet(text):
+def analyze_tweet(text, model):
     retries = 1
     sentiment = None
 
@@ -23,7 +23,7 @@ def analyze_tweet(text):
         ]
 
         completion = completions_with_backoff(
-            model="gpt-3.5-turbo",
+            model=model,
             messages=messages,
             max_tokens=3,
             n=1,
@@ -32,7 +32,7 @@ def analyze_tweet(text):
         )
 
         response_text = completion.choices[0].message.content
-        if response_text in ["HATE", "OFFENSIVE", "NEUTRAL"]:
+        if response_text in ["hate", "offensive", "neutral"]:
             result = response_text
             break
         else:
@@ -47,18 +47,19 @@ def analyze_tweet(text):
     return result
 
 
-if __name__ == '__main__':
+def main(model):
     input_file = "../hate-speech-detection-using-chatgpt/csv/labeled_data_preprocessed.csv"
     df = pd.read_csv(input_file)
     df = df.sample(frac=1)
-
+    
     results = []
     i = 0
+    new_df = df.copy(deep=True)
 
     with tqdm(total = len(df)) as pbar:
         while i < len(df):
             try:
-                result = analyze_tweet(df.tweet.iloc[i])
+                result = analyze_tweet(df.tweet.iloc[i], model)
                 if result == 'HATE':
                     result = 0
                 elif result == 'OFFENSIVE':
@@ -70,9 +71,13 @@ if __name__ == '__main__':
                 pbar.update(1)
             except:
                 pass
-
+            
     column = 'prediction'
-    df.insert(1, column, results)
+    new_df.insert(1, column, results)
 
-    output_file = "../hate-speech-detection-using-chatgpt/csv/labeled_data_and_prediction.csv"
-    df.to_csv(output_file, index=False)
+    output_file = f"../hate-speech-detection-using-chatgpt/csv/labeled_data_and_prediction_{model}.csv"
+    new_df.to_csv(output_file, index=False)
+
+
+if __name__ == '__main__':
+    main("gpt-3.5-turbo")
