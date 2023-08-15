@@ -40,12 +40,17 @@ def main(model, df):
             try:
                 results = analyze_tweet(df.tweet.iloc[i:i+batch_size].tolist(), model)
                 for rst in results:
+                    print(rst.text)
                     if rst.text == 'hate':
                         preds.append(0)
                     elif rst.text == 'offensive':
                         preds.append(1)
-                    else:
+                    elif rst.text == 'neutral':
                         preds.append(2)
+                    else:  # invalid
+                        preds.append(-1)
+		
+
                 i += batch_size
                 pbar.update(1)
             except Exception as e:
@@ -60,9 +65,10 @@ def main(model, df):
 
 
 if __name__ == '__main__':
-    input_file = "../hate-speech-detection-using-chatgpt/csv/labeled_data_preprocessed.csv"
+    input_file = "../hate-speech-detection-using-chatgpt/csv/labeled_data_preprocessed_without_url.csv"
     df = pd.read_csv(input_file)
     df = df.sample(frac=1)
+
     
-    main("fine_tuned_ada_model", df)
+    main("MY_FINE_TUNED_MODEL", df)
     
