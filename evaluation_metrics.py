@@ -30,7 +30,7 @@ def get_metric_scores(filename):
     return scores
 
 
-fine_tuned_ada = "ada:ft-personal-2023-08-14-09-43-04"
+fine_tuned_ada = "MY_FINE_TUNED_MODEL"
 filename = "../hate-speech-detection-using-chatgpt/csv/labeled_data_and_prediction_"
 
 metrics = ['f1 macro', 'f1 micro', 'precision', 'recall']
