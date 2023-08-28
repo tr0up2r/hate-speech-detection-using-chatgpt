@@ -49,7 +49,7 @@ def main(model, df):
                         preds.append(2)
                     else:  # invalid
                         preds.append(-1)
-		
+        
 
                 i += batch_size
                 pbar.update(1)
@@ -65,7 +65,7 @@ def main(model, df):
 
 
 if __name__ == '__main__':
-    input_file = "../hate-speech-detection-using-chatgpt/csv/labeled_data_preprocessed_without_url.csv"
+    input_file = "../hate-speech-detection-using-chatgpt/csv/labeled_data_preprocessed_without_url_test.csv"
     df = pd.read_csv(input_file)
     df = df.sample(frac=1)
 
