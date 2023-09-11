@@ -4,7 +4,11 @@ from tqdm import tqdm
 import time
 import backoff  # for exponential backoff
 
-openai.api_key = "MY_API_KEY"
+
+keys_df = pd.read_csv("../hate-speech-detection-using-chatgpt/csv/keys.csv")
+api_key = keys_df.api_key.values[0]
+fine_tuned_model = keys_df.model.values[0]
+openai.api_key = api_key
 
 
 @backoff.on_exception(backoff.expo, openai.error.RateLimitError)
@@ -40,7 +44,6 @@ def main(model, df):
             try:
                 results = analyze_tweet(df.tweet.iloc[i:i+batch_size].tolist(), model)
                 for rst in results:
-                    print(rst.text)
                     if rst.text == 'hate':
                         preds.append(0)
                     elif rst.text == 'offensive':
@@ -69,6 +72,5 @@ if __name__ == '__main__':
     df = pd.read_csv(input_file)
     df = df.sample(frac=1)
 
-    
-    main("MY_FINE_TUNED_MODEL", df)
+    main(fine_tuned_model, df)
     

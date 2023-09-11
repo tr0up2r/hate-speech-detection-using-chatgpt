@@ -2,6 +2,10 @@ import pandas as pd
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 
+keys_df = pd.read_csv("../hate-speech-detection-using-chatgpt/csv/keys.csv")
+fine_tuned_model = keys_df.model.values[0]
+
+
 def f1_score_func(preds, labels):
     return f1_score(labels, preds, average='macro'), f1_score(labels, preds, average='micro')
 
@@ -30,11 +34,10 @@ def get_metric_scores(filename):
     return scores
 
 
-fine_tuned_ada = "MY_FINE_TUNED_MODEL"
 filename = "../hate-speech-detection-using-chatgpt/csv/labeled_data_and_prediction_"
 
 metrics = ['f1 macro', 'f1 micro', 'precision', 'recall']
-scores = get_metric_scores(filename + fine_tuned_ada + '.csv')
+scores = get_metric_scores(filename + fine_tuned_model + '.csv')
 
 for m, s in zip(metrics, scores):
     print(f'{m}: {s}')
