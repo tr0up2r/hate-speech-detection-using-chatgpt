@@ -6,6 +6,7 @@ import backoff  # for exponential backoff
 
 
 keys_df = pd.read_csv("../hate-speech-detection-using-chatgpt/csv/keys.csv")
+input_file = keys_df.input_file.values[0]
 api_key = keys_df.api_key.values[0]
 fine_tuned_model = keys_df.model.values[0]
 openai.api_key = api_key
@@ -32,7 +33,7 @@ def analyze_tweet(text, model):
     return result
 
 
-def main(model, df):
+def main(model, labels, df):
     preds = []
     i = 0
     new_df = df.copy(deep=True)
@@ -44,15 +45,15 @@ def main(model, df):
             try:
                 results = analyze_tweet(df.tweet.iloc[i:i+batch_size].tolist(), model)
                 for rst in results:
-                    if rst.text == 'hate':
-                        preds.append(0)
-                    elif rst.text == 'offensive':
-                        preds.append(1)
-                    elif rst.text == 'neutral':
-                        preds.append(2)
-                    else:  # invalid
-                        preds.append(-1)
-        
+                    flag = True
+                    for i, label in labels:
+                        if rst.text == label:
+                            preds.append(i)
+                            flag = False
+                            break
+                    
+                    if flag:  # invalid
+                        preds.append(-1)        
 
                 i += batch_size
                 pbar.update(1)
